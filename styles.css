@@ -1,0 +1,121 @@
+/* styles.css */
+
+/* Basic Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container Styling */
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading */
+.container h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* Control Group Styling */
+.control-group {
+    margin-bottom: 20px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.control-group input[type="range"] {
+    width: 100%;
+}
+
+.control-group input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* Drone Control Styling */
+.drone-control {
+    margin-top: 15px;
+}
+
+.drone-control label {
+    margin-bottom: 5px;
+}
+
+.drone-control input[type="range"] {
+    width: 100%;
+}
+
+/* Ducking Control Styling */
+.ducking-control {
+    margin-top: 15px;
+}
+
+.ducking-control label {
+    margin-bottom: 5px;
+}
+
+.ducking-control input[type="range"] {
+    width: 100%;
+}
+
+/* Playback Controls Styling */
+.playback-controls {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.playback-controls button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    font-size: 1em;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background-color: #2196F3;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+.playback-controls button:hover {
+    background-color: #0b7dda;
+}
+
+/* Beat Indicators Styling */
+.beat-indicator {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 30px;
+}
+
+.beat {
+    width: 50px;
+    height: 50px;
+    background-color: #ddd;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.beat.active {
+    background-color: #FF5722;
+}
+
+/* Status Display Styling */
+.status {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
