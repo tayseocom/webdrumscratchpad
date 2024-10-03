@@ -12,17 +12,67 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerID;
 
     // Connection state flags
-    let isDelayConnected = true;
-    let isLowpassConnected = true;
-    let isHighpassConnected = true;
-    let isTomsConnected = false;
-
-    // Ducking Parameters
-    let duckingIntensity = 0.5; // 50% by default
-    let duckingDuration = 200; // 200 ms by default
+    let isDelayConnected = false;
+    let isLowpassConnected = false;
+    let isHighpassConnected = false;
 
     // Global tempo variable initialized to default value
     let tempo = 120;
+
+    // Define tomChance variable
+    let tomChance = 0.25; // 25% chance to play toms on each step
+
+    const kickParams = {
+    'standard': {
+        baseFrequency: 150,
+        detune: 1.02,
+        decay: 0.5,
+        type: 'sine',
+        subFrequency: 60, // Sub-oscillator for depth
+        subGain: 0.3,
+        pitchDecay: 0.05, // Pitch envelope decay
+        filter: null
+    },
+    'deep': { // TR-808 Kick
+        baseFrequency: 100, // Lower base frequency for deeper tone
+        detune: 1.05,
+        decay: 0.7,
+        type: 'sine',
+        subFrequency: 50, // Lower sub-frequency
+        subGain: 0.4,
+        pitchDecay: 0.07,
+        filter: {
+            type: 'lowpass',
+            frequency: 300
+        }
+    },
+    '909': { // TR-909 Kick
+        baseFrequency: 180, // Higher base frequency for snappier sound
+        detune: 1.03,
+        decay: 0.4,
+        type: 'sine',
+        subFrequency: 0, // No sub-oscillator for cleaner tone
+        subGain: 0,
+        pitchDecay: 0.03,
+        filter: {
+            type: 'highpass',
+            frequency: 500
+        }
+    },
+    'true808': { // Enhanced 808 Kick
+        baseFrequency: 120,
+        detune: 1.04,
+        decay: 0.6,
+        type: 'sine',
+        subFrequency: 40,
+        subGain: 0.5,
+        pitchDecay: 0.06,
+        filter: {
+            type: 'lowpass',
+            frequency: 250
+        }
+    }
+};
 
     // Check for necessary DOM elements and buttons
     const startButton = document.getElementById('start');
@@ -65,12 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const drone2FrequencySlider = document.getElementById('drone2-frequency');
     const drone2FrequencyValue = document.getElementById('drone2-frequency-value');
 
-    // Ducking Controls
-    const duckingIntensitySlider = document.getElementById('ducking-intensity');
-    const duckingIntensityValue = document.getElementById('ducking-intensity-value');
-    const duckingDurationSlider = document.getElementById('ducking-duration');
-    const duckingDurationValue = document.getElementById('ducking-duration-value');
-
     // Ensure all sliders and selects are present
     if (!tempoSlider || !tempoValue || !delayTimeSlider || !delayTimeValue ||
         !delayToggle || !filterCutoffSlider || !filterCutoffValue ||
@@ -81,9 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         !kickDecaySlider || !kickDecayValue ||
         !tomsToggle || !hihatPatternSelect ||
         !drone1Toggle || !drone1FrequencySlider || !drone1FrequencyValue ||
-        !drone2Toggle || !drone2FrequencySlider || !drone2FrequencyValue ||
-        !duckingIntensitySlider || !duckingIntensityValue ||
-        !duckingDurationSlider || !duckingDurationValue) {
+        !drone2Toggle || !drone2FrequencySlider || !drone2FrequencyValue) {
         console.error('One or more DOM elements are missing. Please check the element IDs in the HTML and JavaScript.');
         return;
     }
@@ -116,12 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let drone2Enabled = drone2Toggle.checked;
     let drone2Frequency = parseInt(drone2FrequencySlider.value);
     drone2FrequencyValue.textContent = drone2Frequency;
-
-    // Initialize Ducking Parameters
-    duckingIntensity = parseInt(duckingIntensitySlider.value) / 100; // Convert to 0-1
-    duckingIntensityValue.textContent = parseInt(duckingIntensitySlider.value);
-    duckingDuration = parseInt(duckingDurationSlider.value);
-    duckingDurationValue.textContent = duckingDuration;
 
     // Attach event listeners to sliders and select inputs immediately for real-time updates
     tempoSlider.addEventListener('input', (e) => {
@@ -303,30 +339,137 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Ducking Controls Event Listeners
-    duckingIntensitySlider.addEventListener('input', (e) => {
-        duckingIntensity = parseInt(e.target.value) / 100; // Convert to 0-1
-        duckingIntensityValue.textContent = parseInt(e.target.value);
-    });
-
-    duckingDurationSlider.addEventListener('input', (e) => {
-        duckingDuration = parseInt(e.target.value);
-        duckingDurationValue.textContent = duckingDuration;
-    });
-
     // Audio Nodes
     let delayNode;
     let lowpassFilter;
     let highpassFilter;
-    let tomsEnabledFlag = false;
-    let tomChance = 0.25; // 25% chance to play tom on a step
 
     // Drone Nodes
     let drone1Osc1, drone1Osc2, drone1Gain;
     let drone2Osc1, drone2Osc2, drone2Gain;
 
-    // Ducking Gain Nodes for Drones
-    let drone1GainNode, drone2GainNode;
+
+  
+    // --- Begin Bass Synth Functionality Addition ---
+
+    // 1. Define the C Major Scale Frequencies starting at C2 and C3
+const cMajorScale = {
+    'C2': 65.41,
+    'D2': 73.42,
+    'E2': 82.41,
+    'F2': 87.31,
+    'G2': 98.00,
+    'A2': 110.00,
+    'B2': 123.47,
+    'C3': 130.81,
+    'D3': 146.83,
+    'E3': 164.81,
+    'F3': 174.61,
+    'G3': 196.00,
+    'A3': 220.00,
+    'B3': 246.94,
+    'C4': 261.63
+};
+
+    const cMajorNotes = Object.values(cMajorScale); // Array of frequencies
+
+    // 2. Retrieve the Bass Synth Toggle Element
+    const bassToggle = document.getElementById('bass-toggle'); // Ensure this element exists in your HTML
+
+    if (!bassToggle) {
+        console.error('Bass Toggle element with ID "bass-toggle" not found in the DOM.');
+    }
+
+    // 3. Initialize Bass Synth Toggle State
+    let isRandomBassEnabled = bassToggle ? bassToggle.checked : false;
+
+    // 4. Add Event Listener for Bass Toggle
+    if (bassToggle) {
+        bassToggle.addEventListener('change', (e) => {
+            isRandomBassEnabled = e.target.checked;
+            console.log('Random Bass Synth Enabled:', isRandomBassEnabled);
+        });
+    }
+
+    // 5. Implement the Bass Synth Function
+    function playBass(time) {
+        if (!isRandomBassEnabled) return; // Do nothing if bass is not enabled
+
+        // Select a random note from C major scale
+        const randomIndex = Math.floor(Math.random() * cMajorNotes.length);
+        const frequency = cMajorNotes[randomIndex];
+
+        // Optionally, choose to start at C3 or C4
+        const octaveStart = Math.random() < 0.5 ? 'C2' : 'C3';
+        const octaveFrequency = cMajorScale[octaveStart] || 65.41; // Fallback to C3 if undefined
+        const finalFrequency = frequency; // Alternatively, use octaveFrequency or combine both
+
+        // Create oscillator
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sawtooth'; // 'sine' for smooth tones; can be changed to 'square', 'sawtooth', etc.
+        osc.frequency.setValueAtTime(frequency, time);
+
+        // Create gain node for amplitude envelope
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.setValueAtTime(0.15, time); // Adjust gain to prevent clipping
+        gainNode.gain.exponentialRampToValueAtTime(0.001, time + 1.0); // 1-second decay
+
+        // Connect oscillator to gain
+        osc.connect(gainNode);
+
+        // Connect gain to master gain
+        gainNode.connect(masterGain);
+
+        // Start and stop oscillator
+        osc.start(time);
+        osc.stop(time + 1.0); // Duration of the bass note
+
+        // Cleanup after stopping
+        osc.onended = () => {
+            osc.disconnect();
+            gainNode.disconnect();
+        };
+
+        console.log(`Bass Synth Note (${frequency} Hz) played at time:`, time);
+    }
+
+    // 6. Integrate Bass Synth into the Scheduling System
+    function scheduleNote() {
+        // Schedule Kick
+        if (currentStep === 0) {
+            playKick(nextNoteTime);
+        }
+    }
+
+        // Schedule Second Kick on selected beat
+        const secondKickStep = (secondKickBeat - 1) * 4; // e.g., beat 2 -> step 4
+        if (currentStep === secondKickStep) {
+            playKick(nextNoteTime);
+        }
+
+        // Schedule Snare Drum on steps 4 and 12
+        if (currentStep === 4 || currentStep === 12) {
+            playSnare(nextNoteTime);
+        }
+
+        // Schedule Hi-Hat based on pattern
+        if (hihatPattern === '8th') {
+            // 8th notes: every 2 steps (0,2,4,...14)
+            if (currentStep % 2 === 0) {
+                playHiHat(nextNoteTime);
+            }
+        } else if (hihatPattern === '4th') {
+            // 4th notes on offbeat: steps 1,3,5,...15
+            if (currentStep % 4 === 1 || currentStep % 4 === 3) {
+                playHiHat(nextNoteTime);
+            }
+        }
+
+         // Schedule Bass Synth if enabled
+         if (isRandomBassEnabled) {
+            playBass(nextNoteTime);
+        }
+
 
     // Start Button Event Listener
     startButton.addEventListener('click', () => {
@@ -346,12 +489,28 @@ document.addEventListener('DOMContentLoaded', () => {
             scheduler();
             document.getElementById('status').textContent = 'Playing';
         }
+
+        // Start drones if enabled
+        if (drone1Enabled) {
+            startDrone1();
+        }
+        if (drone2Enabled) {
+            startDrone2();
+        }
     });
 
     // Stop Button Event Listener
     stopButton.addEventListener('click', () => {
         stopScheduler();
         document.getElementById('status').textContent = 'Stopped';
+
+        // Stop drones if playing
+        if (drone1Enabled) {
+            stopDrone1();
+        }
+        if (drone2Enabled) {
+            stopDrone2();
+        }
     });
 
     // Function to Setup Audio Context and Nodes
@@ -361,38 +520,32 @@ document.addEventListener('DOMContentLoaded', () => {
         masterGain.gain.value = 0.8;
         masterGain.connect(audioCtx.destination);
 
-        // Low-Pass Filter
-        lowpassFilter = audioCtx.createBiquadFilter();
-        lowpassFilter.type = 'lowpass';
-        lowpassFilter.frequency.value = parseInt(filterCutoffSlider.value); // Initialize with slider value
-        if (lowpassToggle.checked && parseInt(filterCutoffSlider.value) > 0) {
-            lowpassFilter.connect(masterGain);
-            isLowpassConnected = true;
-        } else {
-            isLowpassConnected = false;
-        }
-
         // High-Pass Filter
         highpassFilter = audioCtx.createBiquadFilter();
         highpassFilter.type = 'highpass';
         highpassFilter.frequency.value = parseInt(highpassCutoffSlider.value); // Initialize with slider value
-        if (highpassToggle.checked && parseInt(highpassCutoffSlider.value) > 0) {
-            highpassFilter.connect(lowpassFilter);
-            isHighpassConnected = true;
-        } else {
-            isHighpassConnected = false;
-        }
 
-        // Delay Effect (applied only to snare)
+        // Low-Pass Filter
+        lowpassFilter = audioCtx.createBiquadFilter();
+        lowpassFilter.type = 'lowpass';
+        lowpassFilter.frequency.value = parseInt(filterCutoffSlider.value); // Initialize with slider value
+
+        // Connect High-Pass to Low-Pass to Master Gain
+        highpassFilter.connect(lowpassFilter);
+        lowpassFilter.connect(masterGain);
+
+        // Delay Effect (if enabled)
         delayNode = audioCtx.createDelay();
         delayNode.delayTime.value = parseInt(delayTimeSlider.value) / 1000; // Convert ms to seconds
 
-        // Feedback for Delay (self-oscillating)
+        // Feedback for Delay
         const feedbackGain = audioCtx.createGain();
         feedbackGain.gain.value = 0.5; // Adjust for more or less feedback
 
         delayNode.connect(feedbackGain);
         feedbackGain.connect(delayNode);
+
+        // Connect Delay to Low-Pass Filter if enabled
         if (delayToggle.checked) {
             delayNode.connect(lowpassFilter);
             isDelayConnected = true;
@@ -400,8 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isDelayConnected = false;
         }
 
-        // Initialize tomsEnabledFlag
-        tomsEnabledFlag = tomsEnabled;
+        console.log('Audio Context and Nodes Setup Complete');
     }
 
     // Function to Schedule the Next Note
@@ -422,6 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    
     // Function to Schedule a Note
     function scheduleNote() {
         // Schedule Bass Drum on step 0
@@ -454,11 +607,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Schedule Toms if enabled
-        if (tomsEnabledFlag) {
+        if (tomsEnabled) {
             // Set a probability to play tom on each step
             if (Math.random() < tomChance) {
                 playTom(nextNoteTime);
             }
+        }
+
+        // Schedule Bass Synth if enabled
+        if (isRandomBassEnabled) {
+            playBass(nextNoteTime);
         }
 
         // Highlight Beat Indicators
@@ -490,171 +648,218 @@ document.addEventListener('DOMContentLoaded', () => {
         isPlaying = false;
     }
 
-    // Function to Play Kick Drum Based on Selected Sound
+    // Function to Play Kick Drum (Enhanced)
     function playKick(time) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = 'sine'; // Base waveform
-
-        // Define kick sound parameters based on selection
-        switch (kickSound) {
-            case 'standard':
-                osc.frequency.setValueAtTime(150, time);
-                osc.frequency.exponentialRampToValueAtTime(0.001, time + kickDecay);
-                break;
-            case 'deep':
-                osc.frequency.setValueAtTime(100, time);
-                osc.frequency.exponentialRampToValueAtTime(0.001, time + kickDecay);
-                break;
-            case 'short':
-                osc.frequency.setValueAtTime(200, time);
-                osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.3); // Shorter decay
-                break;
-            case 'reverse':
-                osc.frequency.setValueAtTime(0.001, time);
-                osc.frequency.setValueAtTime(150, time + kickDecay);
-                break;
-            case 'filtered':
-                osc.frequency.setValueAtTime(150, time);
-                osc.frequency.exponentialRampToValueAtTime(0.001, time + kickDecay);
-                break;
-            default:
-                osc.frequency.setValueAtTime(150, time);
-                osc.frequency.exponentialRampToValueAtTime(0.001, time + kickDecay);
-        }
-
-        gain.gain.setValueAtTime(1, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + kickDecay);
-
-        // If 'filtered' kick, apply a low-pass filter
-        if (kickSound === 'filtered') {
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(500, time);
-            osc.connect(filter).connect(gain).connect(highpassFilter).connect(masterGain);
-        } else {
-            osc.connect(gain).connect(highpassFilter).connect(masterGain);
-        }
-
-        osc.start(time);
-        osc.stop(time + kickDecay);
-
-        // Implement Ducking
-        applyDucking(time);
-    }
-
-    // Function to Apply Ducking to Drones
-    function applyDucking(time) {
-        if (!audioCtx) return;
-
-        if (drone1GainNode) {
-            drone1GainNode.gain.cancelScheduledValues(time);
-            drone1GainNode.gain.setValueAtTime(drone1GainNode.gain.value, time);
-            drone1GainNode.gain.linearRampToValueAtTime(drone1GainNode.gain.value * (1 - duckingIntensity), time + duckingDuration / 1000);
-            drone1GainNode.gain.linearRampToValueAtTime(drone1GainNode.gain.value, time + (duckingDuration + 50) / 1000); // Return to normal after ducking
-        }
-
-        if (drone2GainNode) {
-            drone2GainNode.gain.cancelScheduledValues(time);
-            drone2GainNode.gain.setValueAtTime(drone2GainNode.gain.value, time);
-            drone2GainNode.gain.linearRampToValueAtTime(drone2GainNode.gain.value * (1 - duckingIntensity), time + duckingDuration / 1000);
-            drone2GainNode.gain.linearRampToValueAtTime(drone2GainNode.gain.value, time + (duckingDuration + 50) / 1000); // Return to normal after ducking
+        try {
+            const params = kickParams[kickSound]; // Retrieve parameters based on selected kick sound
+    
+            if (params.reverse) {
+                // Handle reverse kick
+                createReversedKickBuffer(params).then(reversedBuffer => {
+                    const bufferSource = audioCtx.createBufferSource();
+                    bufferSource.buffer = reversedBuffer;
+                    bufferSource.connect(masterGain);
+                    bufferSource.start(time);
+                });
+                return;
+            }
+    
+            // Main Oscillator
+            const osc1 = audioCtx.createOscillator();
+            osc1.type = params.type;
+            osc1.frequency.setValueAtTime(params.baseFrequency, time);
+            osc1.frequency.exponentialRampToValueAtTime(0.001, time + params.decay);
+    
+            // Detune
+            osc1.detune.value = params.detune;
+    
+            // Sub-Oscillator
+            let oscSub;
+            if (params.subFrequency > 0) {
+                oscSub = audioCtx.createOscillator();
+                oscSub.type = 'sine';
+                oscSub.frequency.setValueAtTime(params.subFrequency, time);
+                oscSub.frequency.exponentialRampToValueAtTime(0.001, time + params.decay);
+            }
+    
+            // Gain Node for Amplitude Envelope
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(1, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + params.decay);
+    
+            // Connect Oscillators to Gain
+            osc1.connect(gain);
+            if (oscSub) oscSub.connect(gain);
+    
+            // Apply Filter if defined
+            if (params.filter) {
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = params.filter.type; // e.g., 'lowpass'
+                filter.frequency.setValueAtTime(params.filter.frequency, time);
+                gain.connect(filter).connect(masterGain);
+            } else {
+                // Connect Gain to High-Pass Filter and Master Gain
+                gain.connect(highpassFilter).connect(masterGain);
+            }
+    
+            // Start Oscillators
+            osc1.start(time);
+            if (oscSub) oscSub.start(time);
+    
+            // Stop Oscillators After Decay
+            osc1.stop(time + params.decay);
+            if (oscSub) oscSub.stop(time + params.decay);
+    
+            // Cleanup After Stopping
+            osc1.onended = () => {
+                osc1.disconnect();
+                if (oscSub) oscSub.disconnect();
+                gain.disconnect();
+            };
+    
+            console.log(`Kick (${kickSound}) played at time:`, time);
+        } catch (error) {
+            console.error('Error playing kick:', error);
         }
     }
 
     // Function to Play Snare Drum Using Noise
     function playSnare(time) {
-        // Create a noise buffer
-        const bufferSize = audioCtx.sampleRate;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            data[i] = Math.random() * 2 - 1;
+        try {
+            // Create a noise buffer
+            const bufferSize = audioCtx.sampleRate;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            noise.loop = false;
+
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.5, time);
+
+            // Apply filter based on snare shape
+            let snareFilter = audioCtx.createBiquadFilter();
+            if (snareShape === 'clap') {
+                snareFilter.type = 'bandpass';
+                snareFilter.frequency.setValueAtTime(1000, time);
+                snareFilter.Q.value = 1;
+            } else {
+                snareFilter.type = 'highpass';
+                snareFilter.frequency.setValueAtTime(1000, time);
+            }
+
+            // Connect nodes with delay
+            noise.connect(snareFilter)
+                 .connect(noiseGain);
+
+            if (delayToggle.checked && isDelayConnected) {
+                noiseGain.connect(delayNode);
+            } else {
+                noiseGain.connect(masterGain);
+            }
+
+            noise.start(time);
+            noise.stop(time + 0.2);
+
+            console.log('Snare played at time:', time);
+        } catch (error) {
+            console.error('Error playing snare:', error);
         }
-
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-        noise.loop = false;
-
-        const noiseGain = audioCtx.createGain();
-        noiseGain.gain.setValueAtTime(0.5, time);
-
-        // Apply filter based on snare shape
-        let snareFilter = audioCtx.createBiquadFilter();
-        if (snareShape === 'clap') {
-            snareFilter.type = 'bandpass';
-            snareFilter.frequency.setValueAtTime(1000, time);
-            snareFilter.Q.value = 1;
-        } else {
-            snareFilter.type = 'highpass';
-            snareFilter.frequency.setValueAtTime(1000, time);
-        }
-
-        // Connect nodes with delay
-        noise.connect(snareFilter)
-             .connect(noiseGain);
-
-        if (delayToggle.checked && isDelayConnected) {
-            noiseGain.connect(delayNode);
-        } else {
-            noiseGain.connect(masterGain);
-        }
-
-        noise.start(time);
-        noise.stop(time + 0.2);
     }
 
     // Function to Play Hi-Hat Using White Noise
     function playHiHat(time) {
-        // Create a noise buffer
-        const bufferSize = audioCtx.sampleRate;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            data[i] = Math.random() * 2 - 1;
+        try {
+            // Create a noise buffer
+            const bufferSize = audioCtx.sampleRate;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            noise.loop = false;
+
+            // Create a band-pass filter for hi-hat
+            const bandpass = audioCtx.createBiquadFilter();
+            bandpass.type = 'bandpass';
+            bandpass.frequency.setValueAtTime(7000, time); // High frequency for hi-hat
+            bandpass.Q.value = 1;
+
+            // Create a gain node for amplitude envelope
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.3, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05); // Fast decay
+
+            // Connect noise through band-pass filter and gain
+            noise.connect(bandpass)
+                 .connect(gain)
+                 .connect(masterGain);
+
+            noise.start(time);
+            noise.stop(time + 0.05);
+
+            console.log('Hi-Hat played at time:', time);
+        } catch (error) {
+            console.error('Error playing hi-hat:', error);
         }
-
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
-        noise.loop = false;
-
-        // Create a band-pass filter for hi-hat
-        const bandpass = audioCtx.createBiquadFilter();
-        bandpass.type = 'bandpass';
-        bandpass.frequency.setValueAtTime(7000, time); // High frequency for hi-hat
-        bandpass.Q.value = 1;
-
-        // Create a gain node for amplitude envelope
-        const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.3, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05); // Fast decay
-
-        // Connect noise through band-pass filter and gain
-        noise.connect(bandpass)
-             .connect(gain)
-             .connect(masterGain);
-
-        noise.start(time);
-        noise.stop(time + 0.05);
     }
 
-    // Function to Play Toms Using an Oscillator
+    // Function to Play Toms Using Dual Oscillators
     function playTom(time) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        try {
+            if (!tomsEnabled) return; // Ensure toms are enabled
 
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(200, time);
-        osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.3); // Short decay
+            // Create Gain Node for Tom Volume Control
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.04, time); // Adjust volume as needed
 
-        gain.gain.setValueAtTime(0.4, time);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+            // Create Oscillators for Tom (Dual Oscillators for Chorus Effect)
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
 
-        osc.connect(gain).connect(highpassFilter).connect(masterGain);
+            osc1.type = 'square';
+            osc2.type = 'triangle';
+            osc1.frequency.setValueAtTime(200, time); // Base frequency for tom
+            osc2.frequency.setValueAtTime(200 * 1.01, time); // Slight detune for chorus
 
-        osc.start(time);
-        osc.stop(time + 0.3);
+            // Configure Frequency Envelope
+            osc1.frequency.exponentialRampToValueAtTime(0.001, time + 0.5); // 0.5 seconds decay
+            osc2.frequency.exponentialRampToValueAtTime(0.001, time + 0.5);
+            
+
+            // Connect Oscillators to Gain
+            osc1.connect(gain);
+            osc2.connect(gain);
+
+            // Connect Gain to High-Pass Filter and Master Gain
+            gain.connect(highpassFilter).connect(masterGain);
+
+            // Start Oscillators
+            osc1.start(time);
+            osc2.start(time);
+
+            // Stop Oscillators After Decay
+            osc1.stop(time + 0.5);
+            osc2.stop(time + 0.5);
+
+            // Cleanup After Stopping
+            osc1.onended = () => {
+                osc1.disconnect();
+                osc2.disconnect();
+                gain.disconnect();
+            };
+
+            console.log('Tom played at time:', time);
+        } catch (error) {
+            console.error('Error playing tom:', error);
+        }
     }
 
     // Function to Highlight Current Beat Indicator
@@ -682,19 +887,21 @@ document.addEventListener('DOMContentLoaded', () => {
         drone1Osc2.type = 'sine';
         drone1Osc2.frequency.setValueAtTime(drone1Frequency * 1.005, audioCtx.currentTime); // Slight detune for chorus
 
-        drone1GainNode = audioCtx.createGain();
-        drone1GainNode.gain.value = 0.1; // Subtle volume
+        drone1Gain = audioCtx.createGain();
+        drone1Gain.gain.value = 0.1; // Subtle volume
 
-        // Connect oscillators to gain node
-        drone1Osc1.connect(drone1GainNode);
-        drone1Osc2.connect(drone1GainNode);
+        // Connect oscillators to gain
+        drone1Osc1.connect(drone1Gain);
+        drone1Osc2.connect(drone1Gain);
 
-        // Connect gain node to master
-        drone1GainNode.connect(masterGain);
+        // Connect gain to master with subtle chorus effect
+        drone1Gain.connect(masterGain);
 
         // Start oscillators
         drone1Osc1.start();
         drone1Osc2.start();
+
+        console.log('Drone 1 started at frequency:', drone1Frequency);
     }
 
     function stopDrone1() {
@@ -708,10 +915,11 @@ document.addEventListener('DOMContentLoaded', () => {
             drone1Osc2.disconnect();
             drone1Osc2 = null;
         }
-        if (drone1GainNode) {
-            drone1GainNode.disconnect();
-            drone1GainNode = null;
+        if (drone1Gain) {
+            drone1Gain.disconnect();
+            drone1Gain = null;
         }
+        console.log('Drone 1 stopped');
     }
 
     // Drone 2 Functions
@@ -726,19 +934,21 @@ document.addEventListener('DOMContentLoaded', () => {
         drone2Osc2.type = 'sine';
         drone2Osc2.frequency.setValueAtTime(drone2Frequency * 1.005, audioCtx.currentTime); // Slight detune for chorus
 
-        drone2GainNode = audioCtx.createGain();
-        drone2GainNode.gain.value = 0.1; // Subtle volume
+        drone2Gain = audioCtx.createGain();
+        drone2Gain.gain.value = 0.1; // Subtle volume
 
-        // Connect oscillators to gain node
-        drone2Osc1.connect(drone2GainNode);
-        drone2Osc2.connect(drone2GainNode);
+        // Connect oscillators to gain
+        drone2Osc1.connect(drone2Gain);
+        drone2Osc2.connect(drone2Gain);
 
-        // Connect gain node to master
-        drone2GainNode.connect(masterGain);
+        // Connect gain to master with subtle chorus effect
+        drone2Gain.connect(masterGain);
 
         // Start oscillators
         drone2Osc1.start();
         drone2Osc2.start();
+
+        console.log('Drone 2 started at frequency:', drone2Frequency);
     }
 
     function stopDrone2() {
@@ -752,10 +962,11 @@ document.addEventListener('DOMContentLoaded', () => {
             drone2Osc2.disconnect();
             drone2Osc2 = null;
         }
-        if (drone2GainNode) {
-            drone2GainNode.disconnect();
-            drone2GainNode = null;
+        if (drone2Gain) {
+            drone2Gain.disconnect();
+            drone2Gain = null;
         }
+        console.log('Drone 2 stopped');
     }
 
     // Function to Create a Simple Reverb Buffer (Optional Enhancement)
@@ -772,29 +983,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return impulse;
     }
 
-    // Initialize Drone Toggles
-    if (drone1Enabled) {
-        startDrone1();
+    // Register Service Worker (For PWA - Optional)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch((error) => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        });
     }
-    if (drone2Enabled) {
-        startDrone2();
-    }
-
-    // Function to Setup Ducking Gain Nodes
-    function setupDucking() {
-        // Create separate gain nodes for drones to control their volumes independently
-        if (drone1GainNode) {
-            // Already connected directly to master
-            // No additional setup needed
-        }
-
-        if (drone2GainNode) {
-            // Already connected directly to master
-            // No additional setup needed
-        }
-    }
-
-    // Call setupDucking after setting up audio context
-    setupDucking();
-
 });
