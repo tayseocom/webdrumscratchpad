@@ -69,8 +69,8 @@
                 <select id="kick-sound">
                     <option value="standard">Standard</option>
                     <option value="deep">Deep 808</option>
-                    <option value="short">Short Punch</option>
-                    <option value="reverse">Reverse</option>
+                    <option value="909">Short Punch</option>
+                    <option value="true808">Reverse</option>
                     <option value="filtered">Filtered</option>
                 </select>
             </div>
@@ -92,11 +92,27 @@
 
             <!-- Toms Control -->
             <div class="control-group">
+                    <label for="tom-chance">Tom Chance: <span id="tom-chance-value">25%</span></label>
+                    <input type="range" id="tom-chance" min="0" max="100" value="25">
+                </div>
                 <label>
                     <input type="checkbox" id="toms-toggle">
                     Enable Toms
                 </label>
             </div>
+            <!-- Bass Chance Slider Control -->
+<div class="control-group">
+    <label for="bass-chance">Bass Chance: <span id="bass-chance-value">25</span>%</label>
+    <input type="range" id="bass-chance" min="0" max="100" value="25">
+</div>
+             <!-- New: Random Bass Synth Toggle -->
+             <div class="control-group">
+                <label>
+                    <input type="checkbox" id="bass-toggle">
+                    Enable Random Bass Synth
+                </label>
+            </div>
+
 
             <!-- Hi-Hat Pattern Control -->
             <div class="control-group">

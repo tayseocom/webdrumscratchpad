@@ -7,6 +7,18 @@
     padding: 0;
 }
 
+.control-group {
+    margin: 10px 0;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.control-group input[type="range"] {
+    width: 100%;
+}
 /* Container Styling */
 .container {
     max-width: 800px;
