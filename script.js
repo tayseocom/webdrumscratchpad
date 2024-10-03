@@ -352,24 +352,24 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // --- Begin Bass Synth Functionality Addition ---
 
-    // 1. Define the C Major Scale Frequencies starting at C3 and C4
-    const cMajorScale = {
-        'C3': 130.81,
-        'D3': 146.83,
-        'E3': 164.81,
-        'F3': 174.61,
-        'G3': 196.00,
-        'A3': 220.00,
-        'B3': 246.94,
-        'C4': 261.63,
-        'D4': 293.66,
-        'E4': 329.63,
-        'F4': 349.23,
-        'G4': 392.00,
-        'A4': 440.00,
-        'B4': 493.88,
-        'C5': 523.25
-    };
+    // 1. Define the C Major Scale Frequencies starting at C2 and C3
+const cMajorScale = {
+    'C2': 65.41,
+    'D2': 73.42,
+    'E2': 82.41,
+    'F2': 87.31,
+    'G2': 98.00,
+    'A2': 110.00,
+    'B2': 123.47,
+    'C3': 130.81,
+    'D3': 146.83,
+    'E3': 164.81,
+    'F3': 174.61,
+    'G3': 196.00,
+    'A3': 220.00,
+    'B3': 246.94,
+    'C4': 261.63
+};
 
     const cMajorNotes = Object.values(cMajorScale); // Array of frequencies
 
@@ -400,13 +400,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const frequency = cMajorNotes[randomIndex];
 
         // Optionally, choose to start at C3 or C4
-        const octaveStart = Math.random() < 0.5 ? 'C3' : 'C4';
-        const octaveFrequency = cMajorScale[octaveStart] || 130.81; // Fallback to C3 if undefined
+        const octaveStart = Math.random() < 0.5 ? 'C2' : 'C3';
+        const octaveFrequency = cMajorScale[octaveStart] || 65.41; // Fallback to C3 if undefined
         const finalFrequency = frequency; // Alternatively, use octaveFrequency or combine both
 
         // Create oscillator
         const osc = audioCtx.createOscillator();
-        osc.type = 'sine'; // 'sine' for smooth tones; can be changed to 'square', 'sawtooth', etc.
+        osc.type = 'sawtooth'; // 'sine' for smooth tones; can be changed to 'square', 'sawtooth', etc.
         osc.frequency.setValueAtTime(frequency, time);
 
         // Create gain node for amplitude envelope
