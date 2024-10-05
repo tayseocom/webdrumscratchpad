@@ -19,6 +19,7 @@
 .control-group input[type="range"] {
     width: 100%;
 }
+
 /* Container Styling */
 .container {
     max-width: 800px;
@@ -66,19 +67,6 @@
 }
 
 .drone-control input[type="range"] {
-    width: 100%;
-}
-
-/* Ducking Control Styling */
-.ducking-control {
-    margin-top: 15px;
-}
-
-.ducking-control label {
-    margin-bottom: 5px;
-}
-
-.ducking-control input[type="range"] {
     width: 100%;
 }
 
@@ -130,4 +118,22 @@
     font-size: 1.2em;
     font-weight: bold;
     color: #333;
+}
+
+/* Additional Styling for Enhanced Snare Options */
+
+/* Optional: Style the select dropdown for better appearance */
+.control-group select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: white;
+    font-size: 1em;
+    color: #333;
+}
+
+/* Optional: Add hover effects to the beats */
+.beat:hover {
+    background-color: #bbb;
 }

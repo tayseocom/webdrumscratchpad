@@ -71,7 +71,7 @@
                     <option value="deep">Deep 808</option>
                     <option value="909">Short Punch</option>
                     <option value="true808">Reverse</option>
-                    <option value="filtered">Filtered</option>
+                    <!-- Removed 'filtered' option to align with script.js -->
                 </select>
             </div>
 
@@ -81,6 +81,10 @@
                 <select id="snare-shape">
                     <option value="standard">Standard</option>
                     <option value="clap">Clap</option>
+                    <option value="acoustic-snap">Acoustic Snap</option>
+                    <option value="electronic-tight">Electronic Tight</option>
+                    <option value="clap-layered">Clap Layered</option>
+                    <option value="reverb-tail">Reverb Tail</option>
                 </select>
             </div>
 
@@ -92,27 +96,27 @@
 
             <!-- Toms Control -->
             <div class="control-group">
-                    <label for="tom-chance">Tom Chance: <span id="tom-chance-value">25%</span></label>
-                    <input type="range" id="tom-chance" min="0" max="100" value="25">
-                </div>
+                <label for="tom-chance">Tom Chance: <span id="tom-chance-value">25%</span></label>
+                <input type="range" id="tom-chance" min="0" max="100" value="25">
                 <label>
                     <input type="checkbox" id="toms-toggle">
                     Enable Toms
                 </label>
             </div>
+
             <!-- Bass Chance Slider Control -->
-<div class="control-group">
-    <label for="bass-chance">Bass Chance: <span id="bass-chance-value">25</span>%</label>
-    <input type="range" id="bass-chance" min="0" max="100" value="25">
-</div>
-             <!-- New: Random Bass Synth Toggle -->
-             <div class="control-group">
+            <div class="control-group">
+                <label for="bass-chance">Bass Chance: <span id="bass-chance-value">25</span>%</label>
+                <input type="range" id="bass-chance" min="0" max="100" value="25">
+            </div>
+
+            <!-- Random Bass Synth Toggle -->
+            <div class="control-group">
                 <label>
                     <input type="checkbox" id="bass-toggle">
                     Enable Random Bass Synth
                 </label>
             </div>
-
 
             <!-- Hi-Hat Pattern Control -->
             <div class="control-group">
@@ -133,8 +137,8 @@
                         <input type="checkbox" id="drone1-toggle">
                         Enable Drone 1
                     </label>
-                    <label for="drone1-frequency">Drone 1 Frequency (Hz): <span id="drone1-frequency-value">220</span></label>
-                    <input type="range" id="drone1-frequency" min="50" max="1000" value="220">
+                    <label for="drone1-frequency">Drone 1 Frequency (Hz): <span id="drone1-frequency-value">261.63</span></label>
+                    <input type="range" id="drone1-frequency" min="50" max="1000" value="261.63" list="note-frequencies">
                 </div>
 
                 <!-- Drone 2 Controls -->
@@ -143,48 +147,49 @@
                         <input type="checkbox" id="drone2-toggle">
                         Enable Drone 2
                     </label>
-                    <label for="drone2-frequency">Drone 2 Frequency (Hz): <span id="drone2-frequency-value">330</span></label>
-                    <input type="range" id="drone2-frequency" min="50" max="1000" value="330">
+                    <label for="drone2-frequency">Drone 2 Frequency (Hz): <span id="drone2-frequency-value">329.63</span></label>
+                    <input type="range" id="drone2-frequency" min="50" max="1000" value="329.63" list="note-frequencies">
                 </div>
+
+                <!-- Drone 3 Controls -->
+                <div class="drone-control">
+                    <label>
+                        <input type="checkbox" id="drone3-toggle">
+                        Enable Drone 3
+                    </label>
+                    <label for="drone3-frequency">Drone 3 Frequency (Hz): <span id="drone3-frequency-value">493.88</span></label>
+                    <input type="range" id="drone3-frequency" min="50" max="1000" value="493.88" list="note-frequencies">
+                </div>
+
+                <!-- Note Markers -->
+                <datalist id="note-frequencies">
+                    <option value="261.63" label="C4"></option>
+                    <option value="329.63" label="E4"></option>
+                    <option value="392.00" label="G4"></option>
+                    <option value="493.88" label="B4"></option>
+                    <!-- Add more notes as needed -->
+                </datalist>
             </div>
 
-            <!-- Ducking Controls -->
-            <div class="control-group">
-                <h2>Ducking (Side-Chaining)</h2>
-
-                <label>
-                    <input type="checkbox" id="ducking-toggle">
-                    Enable Ducking
-                </label>
-
-                <label for="ducking-intensity">Ducking Intensity (%): <span id="ducking-intensity-value">50</span></label>
-                <input type="range" id="ducking-intensity" min="0" max="100" value="50">
-
-                <label for="ducking-duration">Ducking Duration (ms): <span id="ducking-duration-value">300</span></label>
-                <input type="range" id="ducking-duration" min="100" max="1000" value="300">
+            <!-- Playback Controls Section -->
+            <div class="playback-controls">
+                <button id="start">Start</button>
+                <button id="stop">Stop</button>
             </div>
 
+            <!-- Status Display -->
+            <div class="status" id="status">Stopped</div>
+
+            <!-- Beat Indicators Section -->
+            <div class="beat-indicator">
+                <div class="beat" id="beat1"></div>
+                <div class="beat" id="beat2"></div>
+                <div class="beat" id="beat3"></div>
+                <div class="beat" id="beat4"></div>
+            </div>
         </div>
 
-        <!-- Playback Controls Section -->
-        <div class="playback-controls">
-            <button id="start">Start</button>
-            <button id="stop">Stop</button>
-        </div>
-
-        <!-- Status Display -->
-        <div class="status" id="status">Stopped</div>
-
-        <!-- Beat Indicators Section -->
-        <div class="beat-indicator">
-            <div class="beat" id="beat1"></div>
-            <div class="beat" id="beat2"></div>
-            <div class="beat" id="beat3"></div>
-            <div class="beat" id="beat4"></div>
-        </div>
-    </div>
-
-    <!-- Script Inclusion -->
-    <script src="script.js"></script>
-</body>
+        <!-- Script Inclusion -->
+        <script src="script.js"></script>
+    </body>
 </html>
