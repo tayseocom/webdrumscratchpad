@@ -1,6 +1,107 @@
 // script.js
 
+
+
 document.addEventListener('DOMContentLoaded', () => {
+
+     // Add this near the top of your script.js file
+     document.addEventListener('keydown', handleKeydown);
+
+     // Variable to track mute state
+     let isMuted = false;
+ 
+     function handleKeydown(event) {
+         // Ignore key presses when typing in input fields
+         if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
+             return;
+         }
+ 
+         switch (event.key.toLowerCase()) {
+             case 's':
+                 // Start playback
+                 if (!isPlaying) {
+                     startButton.click();
+                 }
+                 break;
+             case 'p':
+                 // Stop playback
+                 if (isPlaying) {
+                     stopButton.click();
+                 }
+                 break;
+             case 'd':
+                 // Toggle Delay
+                 delayToggle.checked = !delayToggle.checked;
+                 delayToggle.dispatchEvent(new Event('change'));
+                 break;
+             case 'l':
+                 // Toggle Low-Pass Filter
+                 lowpassToggle.checked = !lowpassToggle.checked;
+                 lowpassToggle.dispatchEvent(new Event('change'));
+                 break;
+             case 'h':
+                 // Toggle High-Pass Filter
+                 highpassToggle.checked = !highpassToggle.checked;
+                 highpassToggle.dispatchEvent(new Event('change'));
+                 break;
+             case 't':
+                 // Toggle Toms
+                 tomsToggle.checked = !tomsToggle.checked;
+                 tomsToggle.dispatchEvent(new Event('change'));
+                 break;
+             case 'b':
+                 // Toggle Bass Synth
+                 bassToggle.checked = !bassToggle.checked;
+                 bassToggle.dispatchEvent(new Event('change'));
+                 break;
+             case '1':
+                 // Toggle Drone 1
+                 drone1Toggle.checked = !drone1Toggle.checked;
+                 drone1Toggle.dispatchEvent(new Event('change'));
+                 break;
+             case '2':
+                 // Toggle Drone 2
+                 drone2Toggle.checked = !drone2Toggle.checked;
+                 drone2Toggle.dispatchEvent(new Event('change'));
+                 break;
+             case '3':
+                 // Toggle Drone 3
+                 drone3Toggle.checked = !drone3Toggle.checked;
+                 drone3Toggle.dispatchEvent(new Event('change'));
+                 break;
+             case 'm':
+                 // Mute/Unmute Master Gain
+                 toggleMasterMute();
+                 break;
+                 case 'k':
+                    // Toggle Keyboard Shortcuts Visibility
+                    const shortcutsElement = document.getElementById('keyboard-shortcuts');
+                    if (shortcutsElement.style.display === 'none' || shortcutsElement.style.display === '') {
+                        shortcutsElement.style.display = 'block';
+                    } else {
+                        shortcutsElement.style.display = 'none';
+                    }
+                    break;
+             default:
+                 // Do nothing for other keys
+                 break;
+         }
+     }
+ 
+     function toggleMasterMute() {
+         if (audioCtx && masterGain) {
+             if (isMuted) {
+                 masterGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+                 isMuted = false;
+                 document.getElementById('status').textContent = 'Unmuted';
+             } else {
+                 masterGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+                 isMuted = true;
+                 document.getElementById('status').textContent = 'Muted';
+             }
+         }
+     }
+
     // Initialize variables
     let audioCtx;
     let masterGain; // Global master gain node

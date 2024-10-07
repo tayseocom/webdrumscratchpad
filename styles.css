@@ -137,3 +137,41 @@
 .beat:hover {
     background-color: #bbb;
 }
+
+
+/* Keyboard Shortcuts Legend Styling */
+.keyboard-shortcuts {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    max-width: 300px;
+    background-color: rgba(245, 245, 245, 0.95);
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.keyboard-shortcuts h2 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.keyboard-shortcuts ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.keyboard-shortcuts li {
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.keyboard-shortcuts strong {
+    color: #000;
+}
+
+/* Hide the shortcuts initially */
+.keyboard-shortcuts {
+    display: none; /* Uncomment this line if you want to hide the shortcuts on page load */}
