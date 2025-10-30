@@ -2,6 +2,7 @@
   const startButton = document.getElementById('start');
   const stopButton = document.getElementById('stop');
   const statusLabel = document.getElementById('status');
+  const sequencerGrid = document.getElementById('sequencer-grid');
 
   const tempoSlider = document.getElementById('tempo');
   const tempoValue = document.getElementById('tempo-value');
@@ -48,6 +49,25 @@
     }
   ];
 
+  const stepCount = 16;
+  const voiceDefinitions = [
+    { id: 'kick', label: 'Kick' },
+    { id: 'snare', label: 'Snare' },
+    { id: 'hat', label: 'Hat' }
+  ];
+
+  const defaultPatterns = {
+    kick: [0, 8],
+    snare: [4, 12],
+    hat: Array.from({ length: stepCount }, (_, index) => (index % 2 === 0 ? index : null)).filter(
+      (index) => index !== null
+    )
+  };
+
+  const sequenceState = new Map();
+  const stepElements = new Map();
+  let playheadStep = -1;
+
   let audioCtx;
   let masterInput;
   let masterGain;
@@ -57,6 +77,9 @@
   let delayFeedback;
   let delaySend;
   let delayWet;
+
+  let snareNoiseBuffer;
+  let hatNoiseBuffer;
 
   let isPlaying = false;
   let schedulerId;
@@ -135,6 +158,230 @@
     node.connect(masterInput);
   }
 
+  function cleanupNodes(...nodes) {
+    nodes.forEach((node) => {
+      if (!node) return;
+      try {
+        node.disconnect();
+      } catch (err) {
+        // ignored
+      }
+    });
+  }
+
+  function createNoiseBuffer(ctx, durationSeconds) {
+    const length = Math.max(1, Math.floor(ctx.sampleRate * durationSeconds));
+    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i += 1) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  }
+
+  function getSnareNoiseBuffer(ctx) {
+    if (!snareNoiseBuffer) {
+      snareNoiseBuffer = createNoiseBuffer(ctx, 0.25);
+    }
+    return snareNoiseBuffer;
+  }
+
+  function getHatNoiseBuffer(ctx) {
+    if (!hatNoiseBuffer) {
+      hatNoiseBuffer = createNoiseBuffer(ctx, 0.08);
+    }
+    return hatNoiseBuffer;
+  }
+
+  function applyStepState(voiceId, stepIndex, state) {
+    const pattern = sequenceState.get(voiceId);
+    if (!pattern) return;
+    pattern[stepIndex] = Boolean(state);
+    const buttons = stepElements.get(voiceId);
+    const button = buttons ? buttons[stepIndex] : undefined;
+    if (!button) return;
+    button.classList.toggle('active', pattern[stepIndex]);
+    button.setAttribute('aria-pressed', pattern[stepIndex] ? 'true' : 'false');
+  }
+
+  function toggleStep(voiceId, stepIndex) {
+    const pattern = sequenceState.get(voiceId);
+    if (!pattern) return;
+    const nextState = !pattern[stepIndex];
+    applyStepState(voiceId, stepIndex, nextState);
+  }
+
+  function updatePlayhead(stepIndex) {
+    if (playheadStep === stepIndex) {
+      return;
+    }
+    stepElements.forEach((buttons) => {
+      buttons.forEach((button, index) => {
+        button.classList.toggle('playing', stepIndex === index);
+      });
+    });
+    playheadStep = stepIndex;
+  }
+
+  function createSequencerGrid() {
+    if (!sequencerGrid) return;
+    sequencerGrid.textContent = '';
+
+    voiceDefinitions.forEach((voice) => {
+      const pattern = new Array(stepCount).fill(false);
+      sequenceState.set(voice.id, pattern);
+
+      const row = document.createElement('div');
+      row.className = 'sequencer-row';
+      row.setAttribute('role', 'row');
+
+      const label = document.createElement('span');
+      label.className = 'sequencer-label';
+      label.textContent = voice.label;
+      label.setAttribute('role', 'rowheader');
+      row.appendChild(label);
+
+      const stepsWrapper = document.createElement('div');
+      stepsWrapper.className = 'steps';
+      stepsWrapper.setAttribute('role', 'presentation');
+
+      const buttons = [];
+      for (let i = 0; i < stepCount; i += 1) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'step';
+        if (i % 4 === 0) {
+          button.classList.add('step--beat');
+        }
+        button.dataset.voice = voice.id;
+        button.dataset.step = String(i);
+        button.setAttribute('aria-label', `${voice.label} step ${i + 1}`);
+        button.setAttribute('aria-pressed', 'false');
+        button.setAttribute('role', 'gridcell');
+        button.addEventListener('click', () => toggleStep(voice.id, i));
+        stepsWrapper.appendChild(button);
+        buttons.push(button);
+      }
+
+      stepElements.set(voice.id, buttons);
+
+      const defaults = defaultPatterns[voice.id] || [];
+      defaults.forEach((index) => {
+        if (typeof index === 'number' && index >= 0 && index < stepCount) {
+          applyStepState(voice.id, index, true);
+        }
+      });
+
+      row.appendChild(stepsWrapper);
+      sequencerGrid.appendChild(row);
+    });
+  }
+
+  function playKick(time) {
+    ensureAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(140, time);
+    osc.frequency.exponentialRampToValueAtTime(50, time + 0.25);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(1.0, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+
+    osc.connect(gain);
+    connectVoice(gain);
+
+    osc.start(time);
+    osc.stop(time + 0.5);
+    osc.onended = () => {
+      cleanupNodes(osc, gain);
+    };
+  }
+
+  function playSnare(time) {
+    ensureAudio();
+    if (!audioCtx) return;
+
+    const noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = getSnareNoiseBuffer(audioCtx);
+
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = 'highpass';
+    noiseFilter.frequency.value = 1200;
+
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.5, time);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+
+    noiseSource.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    connectVoice(noiseGain);
+
+    noiseSource.start(time);
+    noiseSource.stop(time + 0.3);
+    noiseSource.onended = () => {
+      cleanupNodes(noiseSource, noiseFilter, noiseGain);
+    };
+
+    const tone = audioCtx.createOscillator();
+    tone.type = 'triangle';
+    tone.frequency.setValueAtTime(200, time);
+    tone.frequency.exponentialRampToValueAtTime(120, time + 0.18);
+
+    const toneGain = audioCtx.createGain();
+    toneGain.gain.setValueAtTime(0.2, time);
+    toneGain.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
+
+    tone.connect(toneGain);
+    connectVoice(toneGain);
+
+    tone.start(time);
+    tone.stop(time + 0.22);
+    tone.onended = () => {
+      cleanupNodes(tone, toneGain);
+    };
+  }
+
+  function playHat(time) {
+    ensureAudio();
+    if (!audioCtx) return;
+
+    const noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = getHatNoiseBuffer(audioCtx);
+
+    const bandpass = audioCtx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = 9000;
+    bandpass.Q.value = 8;
+
+    const highpass = audioCtx.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = 7000;
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.18, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
+    noiseSource.connect(bandpass);
+    bandpass.connect(highpass);
+    highpass.connect(gain);
+    connectVoice(gain);
+
+    noiseSource.start(time);
+    noiseSource.stop(time + 0.12);
+    noiseSource.onended = () => {
+      cleanupNodes(noiseSource, bandpass, highpass, gain);
+    };
+  }
+
+  const voicePlayers = {
+    kick: playKick,
+    snare: playSnare,
+    hat: playHat
+  };
+
   function playBass(time) {
     if (!audioCtx || !isRandomBassEnabled) return;
     if (Math.random() * 100 >= bassChance) return;
@@ -177,6 +424,20 @@
   }
 
   function scheduleStep() {
+    const stepIndex = currentStep;
+    updatePlayhead(stepIndex);
+
+    voiceDefinitions.forEach((voice) => {
+      const pattern = sequenceState.get(voice.id);
+      if (!pattern || !pattern[stepIndex]) {
+        return;
+      }
+      const player = voicePlayers[voice.id];
+      if (player) {
+        player(nextNoteTime);
+      }
+    });
+
     playBass(nextNoteTime);
   }
 
@@ -206,6 +467,7 @@
 
     nextNoteTime = audioCtx.currentTime + 0.05;
     currentStep = 0;
+    updatePlayhead(-1);
 
     scheduler();
     startEnabledDrones();
@@ -219,6 +481,9 @@
     statusLabel.textContent = 'Stopped';
     startButton.disabled = false;
     stopButton.disabled = true;
+
+    updatePlayhead(-1);
+    currentStep = 0;
 
     stopAllDrones();
   }
@@ -321,6 +586,9 @@
     bassChance = Number(bassChanceSlider.value);
     bassChanceValue.textContent = `${bassChance}%`;
   }
+
+  createSequencerGrid();
+  updatePlayhead(-1);
 
   startButton.addEventListener('click', startSequencer);
   stopButton.addEventListener('click', stopSequencer);
