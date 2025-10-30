@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drumscratchpad - Web Edition</title>
+    <!-- Link to External CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Drumscratchpad - Web Edition</h1>
+        <h2>Press 'k' for keyboard shortcuts</h2>
+
+        <!-- Controls Section -->
+        <div class="controls">
+
+              <!-- Keyboard Shortcuts Legend -->
+        <div class="keyboard-shortcuts" id="keyboard-shortcuts">
+            <h2>Keyboard Shortcuts (Press 'K' to Hide/Show)</h2>
+            <ul>
+                <li><strong>S</strong>: Start Playback</li>
+                <li><strong>P</strong>: Stop Playback</li>
+                <li><strong>D</strong>: Toggle Delay</li>
+                <li><strong>L</strong>: Toggle Low-Pass Filter</li>
+                <li><strong>H</strong>: Toggle High-Pass Filter</li>
+                <li><strong>T</strong>: Toggle Toms</li>
+                <li><strong>B</strong>: Toggle Bass Synth</li>
+                <li><strong>1</strong>: Toggle Drone 1</li>
+                <li><strong>2</strong>: Toggle Drone 2</li>
+                <li><strong>3</strong>: Toggle Drone 3</li>
+                <li><strong>M</strong>: Mute/Unmute Master Output</li>
+                <li><strong>K</strong>: Show/Hide Keyboard Shortcuts</li>
+            </ul>
+        </div>
+
+    </div>
+
+ 
+
+            <!-- Tempo Control -->
+            <div class="control-group">
+                <label for="tempo">Tempo (BPM): <span id="tempo-value">120</span></label>
+                <input type="range" id="tempo" min="60" max="200" value="120">
+            </div>
+
+            <!-- Delay Time Control -->
+            <div class="control-group">
+                <label for="delay-time">Delay Time (ms): <span id="delay-time-value">250</span></label>
+                <input type="range" id="delay-time" min="0" max="1000" value="250">
+                <label>
+                    <input type="checkbox" id="delay-toggle" checked>
+                    Enable Delay
+                </label>
+            </div>
+
+            <!-- Low-Pass Filter Control -->
+            <div class="control-group">
+                <label for="filter-cutoff">Low-Pass Filter Cutoff (Hz): <span id="filter-cutoff-value">1000</span></label>
+                <input type="range" id="filter-cutoff" min="0" max="5000" value="1000">
+                <label>
+                    <input type="checkbox" id="lowpass-toggle" checked>
+                    Enable Low-Pass Filter
+                </label>
+            </div>
+
+            <!-- High-Pass Filter Control -->
+            <div class="control-group">
+                <label for="highpass-cutoff">High-Pass Filter Cutoff (Hz): <span id="highpass-cutoff-value">200</span></label>
+                <input type="range" id="highpass-cutoff" min="0" max="1000" value="200">
+                <label>
+                    <input type="checkbox" id="highpass-toggle" checked>
+                    Enable High-Pass Filter
+                </label>
+            </div>
+
+            <!-- Swing Control -->
+            <div class="control-group">
+                <label for="swing">Swing: <span id="swing-value">0</span></label>
+                <input type="range" id="swing" min="0" max="100" value="0">
+            </div>
+
+            <!-- Second Kick Beat Slider -->
+            <div class="control-group">
+                <label for="second-kick-beat">Second Kick Beat: <span id="second-kick-beat-value">2</span></label>
+                <input type="range" id="second-kick-beat" min="1" max="4" value="2">
+            </div>
+
+            <!-- Kick Sound Selection -->
+            <div class="control-group">
+                <label for="kick-sound">Kick Sound:</label>
+                <select id="kick-sound">
+                    <option value="standard">Standard</option>
+                    <option value="deep">Deep 808</option>
+                    <option value="909">Short Punch</option>
+                    <option value="true808">Reverse</option>
+                    <!-- Removed 'filtered' option to align with script.js -->
+                </select>
+            </div>
+
+            <!-- Snare Shape Control -->
+            <div class="control-group">
+                <label for="snare-shape">Snare Shape:</label>
+                <select id="snare-shape">
+                    <option value="standard">Standard</option>
+                    <option value="clap">Clap</option>
+                    <option value="acoustic-snap">Acoustic Snap</option>
+                    <option value="electronic-tight">Electronic Tight</option>
+                    <option value="clap-layered">Clap Layered</option>
+                    <option value="reverb-tail">Reverb Tail</option>
+                </select>
+            </div>
+
+            <!-- Kick Decay Control -->
+            <div class="control-group">
+                <label for="kick-decay">Kick Decay: <span id="kick-decay-value">0.5</span> s</label>
+                <input type="range" id="kick-decay" min="0.1" max="1.0" step="0.1" value="0.5">
+            </div>
+
+            <!-- Toms Control -->
+            <div class="control-group">
+                <label for="tom-chance">Tom Chance: <span id="tom-chance-value">25%</span></label>
+                <input type="range" id="tom-chance" min="0" max="100" value="25">
+                <label>
+                    <input type="checkbox" id="toms-toggle">
+                    Enable Toms
+                </label>
+            </div>
+
+            <!-- Bass Chance Slider Control -->
+            <div class="control-group">
+                <label for="bass-chance">Bass Chance: <span id="bass-chance-value">25</span>%</label>
+                <input type="range" id="bass-chance" min="0" max="100" value="25">
+            </div>
+
+            <!-- Random Bass Synth Toggle -->
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="bass-toggle">
+                    Enable Random Bass Synth
+                </label>
+            </div>
+
+            <!-- Hi-Hat Pattern Control -->
+            <div class="control-group">
+                <label for="hihat-pattern">Hi-Hat Pattern:</label>
+                <select id="hihat-pattern">
+                    <option value="8th">8th Notes</option>
+                    <option value="4th">4th Notes (Offbeat)</option>
+                </select>
+            </div>
+
+            <!-- Drones Controls -->
+            <div class="control-group">
+                <h2>Drones</h2>
+
+                <!-- Drone 1 Controls -->
+                <div class="drone-control">
+                    <label>
+                        <input type="checkbox" id="drone1-toggle">
+                        Enable Drone 1
+                    </label>
+                    <label for="drone1-frequency">Drone 1 Frequency (Hz): <span id="drone1-frequency-value">261.63</span></label>
+                    <input type="range" id="drone1-frequency" min="50" max="1000" value="261.63" list="note-frequencies">
+                </div>
+
+                <!-- Drone 2 Controls -->
+                <div class="drone-control">
+                    <label>
+                        <input type="checkbox" id="drone2-toggle">
+                        Enable Drone 2
+                    </label>
+                    <label for="drone2-frequency">Drone 2 Frequency (Hz): <span id="drone2-frequency-value">329.63</span></label>
+                    <input type="range" id="drone2-frequency" min="50" max="1000" value="329.63" list="note-frequencies">
+                </div>
+
+                <!-- Drone 3 Controls -->
+                <div class="drone-control">
+                    <label>
+                        <input type="checkbox" id="drone3-toggle">
+                        Enable Drone 3
+                    </label>
+                    <label for="drone3-frequency">Drone 3 Frequency (Hz): <span id="drone3-frequency-value">493.88</span></label>
+                    <input type="range" id="drone3-frequency" min="50" max="1000" value="493.88" list="note-frequencies">
+                </div>
+
+                <!-- Note Markers -->
+                <datalist id="note-frequencies">
+                    <option value="261.63" label="C4"></option>
+                    <option value="329.63" label="E4"></option>
+                    <option value="392.00" label="G4"></option>
+                    <option value="493.88" label="B4"></option>
+                    <!-- Add more notes as needed -->
+                </datalist>
+            </div>
+
+            <!-- Playback Controls Section -->
+            <div class="playback-controls">
+                <button id="start">Start</button>
+                <button id="stop">Stop</button>
+            </div>
+
+            <!-- Status Display -->
+            <div class="status" id="status">Stopped</div>
+
+            <!-- Beat Indicators Section -->
+            <div class="beat-indicator">
+                <div class="beat" id="beat1"></div>
+                <div class="beat" id="beat2"></div>
+                <div class="beat" id="beat3"></div>
+                <div class="beat" id="beat4"></div>
+            </div>
+        </div>
+
+        <!-- Script Inclusion -->
+        <script src="script.js"></script>
+    </body>
+</html>
