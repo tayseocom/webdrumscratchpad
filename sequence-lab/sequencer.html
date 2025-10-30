@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequence Lab</title>
+  <link rel="stylesheet" href="sequencer.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Sequence Lab</h1>
+    <p class="tagline">Build drum and bass patterns with swing, accents, and live synthesis.</p>
+  </header>
+
+  <main class="app">
+    <section class="transport">
+      <button id="play-toggle" class="primary">Play</button>
+      <label>
+        Tempo
+        <input type="range" id="tempo" min="60" max="180" value="120" />
+        <span id="tempo-display">120 BPM</span>
+      </label>
+      <label>
+        Swing
+        <input type="range" id="swing" min="0" max="60" value="0" />
+        <span id="swing-display">0%</span>
+      </label>
+      <label>
+        Volume
+        <input type="range" id="volume" min="0" max="100" value="80" />
+        <span id="volume-display">80%</span>
+      </label>
+      <div class="transport-buttons">
+        <button id="clear-pattern">Clear</button>
+        <button id="randomize-pattern">Randomize</button>
+      </div>
+    </section>
+
+    <section class="sequence-grid" aria-label="Step sequencer grid">
+      <div class="grid-header">
+        <span class="row-label">Instrument</span>
+        <div class="step-labels" aria-hidden="true">
+          <span>1</span><span>2</span><span>3</span><span>4</span>
+          <span>5</span><span>6</span><span>7</span><span>8</span>
+          <span>9</span><span>10</span><span>11</span><span>12</span>
+          <span>13</span><span>14</span><span>15</span><span>16</span>
+        </div>
+      </div>
+
+      <div class="row" data-instrument="kick">
+        <div class="row-header">
+          <h2>Kick</h2>
+          <button class="row-randomize" data-target="kick">Shuffle</button>
+        </div>
+        <div class="steps"></div>
+      </div>
+
+      <div class="row" data-instrument="snare">
+        <div class="row-header">
+          <h2>Snare</h2>
+          <button class="row-randomize" data-target="snare">Shuffle</button>
+        </div>
+        <div class="steps"></div>
+      </div>
+
+      <div class="row" data-instrument="hihat">
+        <div class="row-header">
+          <h2>Hi-hat</h2>
+          <button class="row-randomize" data-target="hihat">Shuffle</button>
+        </div>
+        <div class="steps"></div>
+      </div>
+
+      <div class="row" data-instrument="bass">
+        <div class="row-header">
+          <h2>Bass</h2>
+          <button class="row-randomize" data-target="bass">Shuffle</button>
+        </div>
+        <div class="steps"></div>
+      </div>
+    </section>
+
+    <section class="performance" aria-live="polite">
+      <p id="status">Ready to play.</p>
+      <p>Use the step buttons to toggle hits. Swing delays the offbeats. Shuffle buttons randomize each instrument.</p>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Designed for exploring timing, sound design, and gain staging inspired by the original Web Drum Scratchpad.</p>
+  </footer>
+
+  <script src="sequencer.js"></script>
+</body>
+</html>
