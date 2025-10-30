@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sequence Lab – Live Set Sketchpad</title>
+  <link rel="stylesheet" href="sequencer.css" />
+</head>
+<body>
+  <main class="layout">
+    <header class="masthead">
+      <div class="brand">Sequence Lab</div>
+      <p class="tagline">Polyrythmic sketches, drones &amp; bass in one view.</p>
+    </header>
+
+    <section class="panels">
+      <section class="panel sequencer" aria-labelledby="sequencer-title">
+        <h2 id="sequencer-title">Step Sequencer</h2>
+        <p class="sequencer-note">
+          Tap steps to build 16-part patterns. Active pads glow and the playhead sweep highlights the
+          current column as the groove rolls.
+        </p>
+        <div class="sequencer-grid" id="sequencer-grid" role="grid" aria-label="16 step sequencer"></div>
+      </section>
+
+      <section class="panel transport" aria-labelledby="transport-title">
+        <h2 id="transport-title">Transport</h2>
+        <div class="transport-controls">
+          <button id="start" class="btn">Start</button>
+          <button id="stop" class="btn" disabled>Stop</button>
+          <div class="status" id="status">Idle</div>
+        </div>
+      </section>
+
+      <section class="panel clock" aria-labelledby="clock-title">
+        <h2 id="clock-title">Clock &amp; Swing</h2>
+        <div class="control">
+          <label for="tempo">Tempo <span class="value" id="tempo-value">120 BPM</span></label>
+          <input type="range" id="tempo" min="60" max="200" value="120" />
+        </div>
+        <div class="control">
+          <label for="swing">Swing <span class="value" id="swing-value">0%</span></label>
+          <input type="range" id="swing" min="0" max="100" value="0" />
+        </div>
+      </section>
+
+      <section class="panel fx" aria-labelledby="fx-title">
+        <h2 id="fx-title">Master FX</h2>
+        <div class="control control--toggle">
+          <label class="toggle">
+            <input type="checkbox" id="delay-toggle" checked />
+            <span class="toggle-visual"></span>
+            <span class="toggle-label">Delay</span>
+          </label>
+          <div class="control-inline">
+            <label for="delay-time">Time</label>
+            <input type="range" id="delay-time" min="80" max="1200" value="320" />
+            <span class="value" id="delay-time-value">320 ms</span>
+          </div>
+        </div>
+        <div class="control control--toggle">
+          <label class="toggle">
+            <input type="checkbox" id="highpass-toggle" />
+            <span class="toggle-visual"></span>
+            <span class="toggle-label">High-pass</span>
+          </label>
+          <div class="control-inline">
+            <label for="highpass-cutoff">Cutoff</label>
+            <input type="range" id="highpass-cutoff" min="20" max="1000" value="200" />
+            <span class="value" id="highpass-cutoff-value">200 Hz</span>
+          </div>
+        </div>
+        <div class="control control--toggle">
+          <label class="toggle">
+            <input type="checkbox" id="lowpass-toggle" checked />
+            <span class="toggle-visual"></span>
+            <span class="toggle-label">Low-pass</span>
+          </label>
+          <div class="control-inline">
+            <label for="lowpass-cutoff">Cutoff</label>
+            <input type="range" id="lowpass-cutoff" min="500" max="12000" value="6000" />
+            <span class="value" id="lowpass-cutoff-value">6,000 Hz</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel synth" aria-labelledby="synth-title">
+        <h2 id="synth-title">Synth &amp; Atmosphere</h2>
+        <div class="subheading">Random Bass</div>
+        <div class="control control--toggle">
+          <label class="toggle">
+            <input type="checkbox" id="bass-toggle" />
+            <span class="toggle-visual"></span>
+            <span class="toggle-label">Enable</span>
+          </label>
+          <div class="control-inline">
+            <label for="bass-chance">Chance</label>
+            <input type="range" id="bass-chance" min="0" max="100" value="40" />
+            <span class="value" id="bass-chance-value">40%</span>
+          </div>
+        </div>
+
+        <div class="subheading">Drones</div>
+        <div class="drone" data-drone="1">
+          <div class="control control--toggle">
+            <label class="toggle">
+              <input type="checkbox" id="drone1-toggle" />
+              <span class="toggle-visual"></span>
+              <span class="toggle-label">Drone 1</span>
+            </label>
+            <div class="control-inline">
+              <label for="drone1-frequency">Freq</label>
+              <input type="range" id="drone1-frequency" min="40" max="320" value="110" />
+              <span class="value" id="drone1-frequency-value">110 Hz</span>
+            </div>
+          </div>
+        </div>
+        <div class="drone" data-drone="2">
+          <div class="control control--toggle">
+            <label class="toggle">
+              <input type="checkbox" id="drone2-toggle" />
+              <span class="toggle-visual"></span>
+              <span class="toggle-label">Drone 2</span>
+            </label>
+            <div class="control-inline">
+              <label for="drone2-frequency">Freq</label>
+              <input type="range" id="drone2-frequency" min="80" max="520" value="220" />
+              <span class="value" id="drone2-frequency-value">220 Hz</span>
+            </div>
+          </div>
+        </div>
+        <div class="drone" data-drone="3">
+          <div class="control control--toggle">
+            <label class="toggle">
+              <input type="checkbox" id="drone3-toggle" />
+              <span class="toggle-visual"></span>
+              <span class="toggle-label">Drone 3</span>
+            </label>
+            <div class="control-inline">
+              <label for="drone3-frequency">Freq</label>
+              <input type="range" id="drone3-frequency" min="120" max="780" value="330" />
+              <span class="value" id="drone3-frequency-value">330 Hz</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="sequencer.js" defer></script>
+</body>
+</html>
